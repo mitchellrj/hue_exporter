@@ -109,7 +109,7 @@ func (c lightCollector) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		if light.State.On {
-			c.lightOn.With(lightLabels).Set(2)
+			c.lightOn.With(lightLabels).Set(1)
 		} else {
 			c.lightOn.With(lightLabels).Set(0)
 		}
