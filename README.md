@@ -30,7 +30,7 @@ Each group metric is labelled with the name, and the type.
 
 ## Sensor metrics
 
-Each sensor metric is labelled with the friendly name, the model, the type, the product name, the manufacturer name, and the unique ID.
+Each sensor metric is labelled with the friendly name, the model, the type, the product name, the manufacturer name, the unique ID and the device ID (for motion sensor components). The device ID is a truncated version of the unique ID, that may be used to group the individual sensors that make up a single physical device.
 
 * `hue_sensor_value`: value varies depending on the `type` of the sensor. For switches, it's the value of the last button pressed; for daylight and presence sensors it's a `0` or `1` representing false or true values; for the temperature sensor it's hundredths of a degree celsius; for the light level sensor it's Lux.
 * `hue_sensor_battery`: battery level percentage (0 for sensors that have no battery)

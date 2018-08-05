@@ -24,6 +24,7 @@ var variableSensorLabelNames = []string{
 	"manufacturer_name",
 	"product_name",
 	"unique_id",
+	"device_id",
 }
 
 func contains(a []string, x string) bool {
@@ -122,6 +123,7 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for _, sensor := range sensors {
 		var sensorValue float64
+		deviceID := sensor.UniqueID
 		if contains(c.ignoreTypes, sensor.Type) {
 			continue
 		} else if sensor.Type == "Daylight" {
@@ -131,19 +133,24 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 			}
 		} else if sensor.Type == "ZGPSwitch" {
 			// Hue tap switch
+			deviceID = sensor.UniqueID[0:23]
 			sensorValue = float64(sensor.State.ButtonEvent)
 		} else if sensor.Type == "ZLLSwitch" {
 			// Hue dimmer switch
+			deviceID = sensor.UniqueID[0:23]
 			sensorValue = float64(sensor.State.ButtonEvent)
 		} else if sensor.Type == "ClipGenericStatus" {
 			sensorValue = float64(sensor.State.Status)
 		} else if sensor.Type == "ZLLTemperature" {
+			deviceID = sensor.UniqueID[0:23]
 			sensorValue = float64(sensor.State.Temperature)
 		} else if sensor.Type == "ZLLPresence" {
+			deviceID = sensor.UniqueID[0:23]
 			if sensor.State.Presence {
 				sensorValue = 1
 			}
 		} else if sensor.Type == "ZLLLightLevel" {
+			deviceID = sensor.UniqueID[0:23]
 			sensorValue = float64(sensor.State.LightLevel)
 		}
 
@@ -153,6 +160,7 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 			"manufacturer_name": sensor.ManufacturerName,
 			"type":              sensor.Type,
 			"unique_id":         sensor.UniqueID,
+			"device_id":         deviceID,
 			"product_name":      sensor.ProductName,
 		}
 
