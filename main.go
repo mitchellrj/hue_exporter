@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v2"
@@ -64,7 +65,12 @@ func runServer() {
 	prometheus.MustRegister(NewSensorCollector(namespace, bridge, cfg.SensorConfig.IgnoreTypes))
 
 	http.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe((*addr).String(), nil))
+	srv := &http.Server{
+		Addr:         (*addr).String(),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+	log.Fatal(srv.ListenAndServe())
 }
 
 func main() {
