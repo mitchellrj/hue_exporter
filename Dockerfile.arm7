@@ -1,8 +1,10 @@
-FROM        quay.io/prometheus/busybox:latest
+FROM        arm32v7/busybox:latest
 MAINTAINER  Richard Mitchell <hue-exporter@mitch.org.uk>
 
-COPY hue_exporter  /bin/hue_exporter
-COPY hue_exporter.example.yml       /etc/hue_exporter/config.yml
+COPY ./build/hue_exporter.arm7 /bin/hue_exporter
+COPY hue_exporter.example.yml   /etc/hue_exporter/config.yml
+
+VOLUME /etc/hue_exporter
 
 EXPOSE      9366
 ENTRYPOINT  [ "/bin/hue_exporter" ]
