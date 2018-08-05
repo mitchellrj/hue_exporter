@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -69,7 +70,7 @@ func runServer() {
 func main() {
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 	if *version {
-		println(VERSION)
+		fmt.Printf("%s\n", VERSION)
 	} else {
 		switch command {
 		case run.FullCommand():
