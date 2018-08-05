@@ -7,12 +7,13 @@ import (
 )
 
 type lightCollector struct {
-	bridge          *hue.Bridge
-	lightBrightness *prometheus.GaugeVec
-	lightHue        *prometheus.GaugeVec
-	lightSaturation *prometheus.GaugeVec
-	lightOn         *prometheus.GaugeVec
-	lightReachable  *prometheus.GaugeVec
+	bridge             *hue.Bridge
+	lightBrightness    *prometheus.GaugeVec
+	lightHue           *prometheus.GaugeVec
+	lightSaturation    *prometheus.GaugeVec
+	lightOn            *prometheus.GaugeVec
+	lightReachable     *prometheus.GaugeVec
+	lightScrapesFailed prometheus.Counter
 }
 
 var variableLightLabelNames = []string{
@@ -73,6 +74,14 @@ func NewLightCollector(namespace string, bridge *hue.Bridge) prometheus.Collecto
 			},
 			variableLightLabelNames,
 		),
+		lightScrapesFailed: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Subsystem: "light",
+				Name:      "scrapes_failed",
+				Help:      "Count of scrapes of light data from the Hue bridge that have failed",
+			},
+		),
 	}
 
 	return c
@@ -84,6 +93,7 @@ func (c lightCollector) Describe(ch chan<- *prometheus.Desc) {
 	c.lightHue.Describe(ch)
 	c.lightSaturation.Describe(ch)
 	c.lightReachable.Describe(ch)
+	c.lightScrapesFailed.Describe(ch)
 }
 
 func (c lightCollector) Collect(ch chan<- prometheus.Metric) {
@@ -96,6 +106,7 @@ func (c lightCollector) Collect(ch chan<- prometheus.Metric) {
 	lights, err := c.bridge.GetAllLights()
 	if err != nil {
 		log.Errorf("Failed to update lights: %v", err)
+		c.lightScrapesFailed.Inc()
 	}
 
 	for _, light := range lights {
@@ -128,4 +139,5 @@ func (c lightCollector) Collect(ch chan<- prometheus.Metric) {
 	c.lightHue.Collect(ch)
 	c.lightSaturation.Collect(ch)
 	c.lightReachable.Collect(ch)
+	c.lightScrapesFailed.Collect(ch)
 }

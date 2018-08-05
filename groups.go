@@ -7,11 +7,12 @@ import (
 )
 
 type groupCollector struct {
-	bridge          *hue.Bridge
-	groupBrightness *prometheus.GaugeVec
-	groupHue        *prometheus.GaugeVec
-	groupSaturation *prometheus.GaugeVec
-	groupOn         *prometheus.GaugeVec
+	bridge             *hue.Bridge
+	groupBrightness    *prometheus.GaugeVec
+	groupHue           *prometheus.GaugeVec
+	groupSaturation    *prometheus.GaugeVec
+	groupOn            *prometheus.GaugeVec
+	groupScrapesFailed prometheus.Counter
 }
 
 var variableGroupLabelNames = []string{
@@ -59,6 +60,14 @@ func NewGroupCollector(namespace string, bridge *hue.Bridge) prometheus.Collecto
 			},
 			variableLightLabelNames,
 		),
+		groupScrapesFailed: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Subsystem: "group",
+				Name:      "scrapes_failed",
+				Help:      "Count of scrapes of group data from the Hue bridge that have failed",
+			},
+		),
 	}
 
 	return c
@@ -69,6 +78,7 @@ func (c groupCollector) Describe(ch chan<- *prometheus.Desc) {
 	c.groupBrightness.Describe(ch)
 	c.groupHue.Describe(ch)
 	c.groupSaturation.Describe(ch)
+	c.groupScrapesFailed.Describe(ch)
 }
 
 func (c groupCollector) Collect(ch chan<- prometheus.Metric) {
@@ -80,6 +90,7 @@ func (c groupCollector) Collect(ch chan<- prometheus.Metric) {
 	groups, err := c.bridge.GetAllGroups()
 	if err != nil {
 		log.Errorf("Failed to update groups: %v", err)
+		c.groupScrapesFailed.Inc()
 	}
 
 	for _, group := range groups {
@@ -108,4 +119,5 @@ func (c groupCollector) Collect(ch chan<- prometheus.Metric) {
 	c.groupBrightness.Collect(ch)
 	c.groupHue.Collect(ch)
 	c.groupSaturation.Collect(ch)
+	c.groupScrapesFailed.Collect(ch)
 }

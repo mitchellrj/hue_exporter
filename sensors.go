@@ -7,13 +7,14 @@ import (
 )
 
 type sensorCollector struct {
-	bridge            *hue.Bridge
-	ignoreTypes       []string
-	sensorValue       *prometheus.GaugeVec
-	sensorLastUpdated *prometheus.GaugeVec
-	sensorOn          *prometheus.GaugeVec
-	sensorBattery     *prometheus.GaugeVec
-	sensorReachable   *prometheus.GaugeVec
+	bridge              *hue.Bridge
+	ignoreTypes         []string
+	sensorValue         *prometheus.GaugeVec
+	sensorLastUpdated   *prometheus.GaugeVec
+	sensorOn            *prometheus.GaugeVec
+	sensorBattery       *prometheus.GaugeVec
+	sensorReachable     *prometheus.GaugeVec
+	sensorScrapesFailed prometheus.Counter
 }
 
 var variableSensorLabelNames = []string{
@@ -84,6 +85,14 @@ func NewSensorCollector(namespace string, bridge *hue.Bridge, ignoreTypes []stri
 			},
 			variableSensorLabelNames,
 		),
+		sensorScrapesFailed: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Subsystem: "sensor",
+				Name:      "scrapes_failed",
+				Help:      "Count of scrapes of sensor data from the Hue bridge that have failed",
+			},
+		),
 	}
 
 	return c
@@ -95,6 +104,7 @@ func (c sensorCollector) Describe(ch chan<- *prometheus.Desc) {
 	c.sensorLastUpdated.Describe(ch)
 	c.sensorOn.Describe(ch)
 	c.sensorReachable.Describe(ch)
+	c.sensorScrapesFailed.Describe(ch)
 }
 
 func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
@@ -107,6 +117,7 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 	sensors, err := c.bridge.GetAllSensors()
 	if err != nil {
 		log.Errorf("Failed to update sensors: %v", err)
+		c.sensorScrapesFailed.Inc()
 	}
 
 	for _, sensor := range sensors {
@@ -165,4 +176,5 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 	c.sensorLastUpdated.Collect(ch)
 	c.sensorOn.Collect(ch)
 	c.sensorReachable.Collect(ch)
+	c.sensorScrapesFailed.Collect(ch)
 }
