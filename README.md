@@ -66,6 +66,10 @@ hue_exporter --config.file hue_exporter.yml --listen.address :9366
 
 Those flag values are the defaults, so you could just run `hue_exporter` on its own if you're happy with those.
 
+### Docker
+
+There are a few docker images built, including ones for ARM7 (Raspberry Pi). You can find these on [Docker Hub](https://hub.docker.com/r/mitchellrj/hue_exporter). They expose `/etc/hue_exporter` as a volume for you to generate or pass in your own configuration.
+
 ## License
 
 MIT / X11 Consortium license. I'd prefer to use Apache 2.0, but the excellent Hue library that this app uses is GPL 2.0 and that isn't compatible with Apache.
