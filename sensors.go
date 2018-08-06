@@ -9,6 +9,7 @@ import (
 type sensorCollector struct {
 	bridge              *hue.Bridge
 	ignoreTypes         []string
+	matchNames          bool
 	sensorValue         *prometheus.GaugeVec
 	sensorLastUpdated   *prometheus.GaugeVec
 	sensorOn            *prometheus.GaugeVec
@@ -37,10 +38,11 @@ func contains(a []string, x string) bool {
 }
 
 // NewSensorCollector Create a new Hue collector for sensors
-func NewSensorCollector(namespace string, bridge *hue.Bridge, ignoreTypes []string) prometheus.Collector {
+func NewSensorCollector(namespace string, bridge *hue.Bridge, ignoreTypes []string, matchNames bool) prometheus.Collector {
 	c := sensorCollector{
 		bridge:      bridge,
 		ignoreTypes: ignoreTypes,
+		matchNames:  matchNames,
 		sensorValue: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
@@ -108,6 +110,32 @@ func (c sensorCollector) Describe(ch chan<- *prometheus.Desc) {
 	c.sensorScrapesFailed.Describe(ch)
 }
 
+func (c sensorCollector) recordSensor(sensor hue.Sensor, sensorName string, deviceID string, sensorValue float64) {
+	sensorLabels := prometheus.Labels{
+		"name":              sensorName,
+		"model_id":          sensor.ModelID,
+		"manufacturer_name": sensor.ManufacturerName,
+		"type":              sensor.Type,
+		"unique_id":         sensor.UniqueID,
+		"device_id":         deviceID,
+		"product_name":      sensor.ProductName,
+	}
+
+	c.sensorValue.With(sensorLabels).Set(sensorValue)
+	c.sensorBattery.With(sensorLabels).Set(float64(sensor.Config.Battery))
+	c.sensorLastUpdated.With(sensorLabels).Set(float64(sensor.State.LastUpdated.Unix()))
+	if sensor.Config.On {
+		c.sensorOn.With(sensorLabels).Set(1)
+	} else {
+		c.sensorOn.With(sensorLabels).Set(0)
+	}
+	if sensor.Config.Reachable {
+		c.sensorReachable.With(sensorLabels).Set(1)
+	} else {
+		c.sensorReachable.With(sensorLabels).Set(0)
+	}
+}
+
 func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 	c.sensorValue.Reset()
 	c.sensorBattery.Reset()
@@ -120,6 +148,7 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 		log.Errorf("Failed to update sensors: %v", err)
 		c.sensorScrapesFailed.Inc()
 	}
+	sensorNames := make(map[string]string)
 
 	for _, sensor := range sensors {
 		var sensorValue float64
@@ -141,42 +170,38 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 			sensorValue = float64(sensor.State.ButtonEvent)
 		} else if sensor.Type == "ClipGenericStatus" {
 			sensorValue = float64(sensor.State.Status)
-		} else if sensor.Type == "ZLLTemperature" {
-			deviceID = sensor.UniqueID[0:23]
-			sensorValue = float64(sensor.State.Temperature)
 		} else if sensor.Type == "ZLLPresence" {
 			deviceID = sensor.UniqueID[0:23]
+			sensorNames[deviceID] = sensor.Name
 			if sensor.State.Presence {
 				sensorValue = 1
 			}
+		} else {
+			continue
+		}
+
+		c.recordSensor(sensor, sensor.Name, deviceID, sensorValue)
+	}
+	// kinda inefficient looping over them twice, but simplies code when name matching is enabled
+	for _, sensor := range sensors {
+		var sensorValue float64
+		if sensor.Type == "ZLLTemperature" {
+			sensorValue = float64(sensor.State.Temperature)
 		} else if sensor.Type == "ZLLLightLevel" {
-			deviceID = sensor.UniqueID[0:23]
 			sensorValue = float64(sensor.State.LightLevel)
-		}
-
-		sensorLabels := prometheus.Labels{
-			"name":              sensor.Name,
-			"model_id":          sensor.ModelID,
-			"manufacturer_name": sensor.ManufacturerName,
-			"type":              sensor.Type,
-			"unique_id":         sensor.UniqueID,
-			"device_id":         deviceID,
-			"product_name":      sensor.ProductName,
-		}
-
-		c.sensorValue.With(sensorLabels).Set(sensorValue)
-		c.sensorBattery.With(sensorLabels).Set(float64(sensor.Config.Battery))
-		c.sensorLastUpdated.With(sensorLabels).Set(float64(sensor.State.LastUpdated.Unix()))
-		if sensor.Config.On {
-			c.sensorOn.With(sensorLabels).Set(1)
 		} else {
-			c.sensorOn.With(sensorLabels).Set(0)
+			continue
 		}
-		if sensor.Config.Reachable {
-			c.sensorReachable.With(sensorLabels).Set(1)
-		} else {
-			c.sensorReachable.With(sensorLabels).Set(0)
+		deviceID := sensor.UniqueID[0:23]
+		sensorName := sensor.Name
+		if c.matchNames {
+			var ok bool
+			sensorName, ok = sensorNames[deviceID]
+			if !ok {
+				sensorName = sensor.Name
+			}
 		}
+		c.recordSensor(sensor, sensorName, deviceID, sensorValue)
 	}
 
 	c.sensorValue.Collect(ch)
