@@ -9,6 +9,9 @@ There are other Hue exporter projects. They didn't quite do what I wanted and to
 * [huepro](https://github.com/stevenbower/huepro)
 * [hue_exporter](https://github.com/nilsding/hue_exporter)
 
+Here's a screenshot of an [example Grafana dashboard](docs/grafana.json):
+![Grafana](https://raw.githubusercontent.com/mitchellrj/hue_exporter/master/docs/grafana.png)
+
 ## Light metrics
 
 Each light metric is labelled with the friendly name, the model, the type, the product name, the manufacturer name, and the unique ID.
