@@ -7,7 +7,7 @@ import (
 )
 
 type sensorCollector struct {
-	bridge              *hue.Bridge
+	bridge              Bridge
 	ignoreTypes         []string
 	matchNames          bool
 	sensorValue         *prometheus.GaugeVec
@@ -38,7 +38,7 @@ func contains(a []string, x string) bool {
 }
 
 // NewSensorCollector Create a new Hue collector for sensors
-func NewSensorCollector(namespace string, bridge *hue.Bridge, ignoreTypes []string, matchNames bool) prometheus.Collector {
+func NewSensorCollector(namespace string, bridge Bridge, ignoreTypes []string, matchNames bool) prometheus.Collector {
 	c := sensorCollector{
 		bridge:      bridge,
 		ignoreTypes: ignoreTypes,

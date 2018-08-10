@@ -34,36 +34,45 @@ type Config struct {
 	APIKey       string `yaml:"api_key"`
 	SensorConfig struct {
 		IgnoreTypes []string `yaml:"ignore_types"`
+		MatchNames  bool     `yaml:"match_names"`
 	} `yaml:"sensors"`
 }
 
-func runServer() {
+// Bridge is an interface for the bridge struct from Collinux/gohue to allow stubbing in tests
+type Bridge interface {
+	Login(string) error
+	GetAllSensors() ([]hue.Sensor, error)
+	GetAllLights() ([]hue.Light, error)
+	GetAllGroups() ([]hue.Group, error)
+}
 
-	raw, err := ioutil.ReadFile(*config)
-	if err != nil {
-		log.Fatalf("Error reading config file: %v\n", err)
-	}
-
-	var cfg Config
-	err = yaml.Unmarshal(raw, &cfg)
+func readConfig(raw []byte, cfg *Config) {
+	err := yaml.Unmarshal(raw, cfg)
 	if err != nil {
 		log.Fatalf("Error parsing config file: %v\n", err)
 	}
+}
 
-	bridge, err := hue.NewBridge(cfg.IPAddr)
+func newBridge(ipAddr string) Bridge {
+	bridge, err := hue.NewBridge(ipAddr)
 	if err != nil {
-		log.Fatalf("Error connecting to Hue bridge at %v: %v\n", cfg.IPAddr, err)
+		log.Fatalf("Error connecting to Hue bridge at %v: %v\n", ipAddr, err)
 	}
+	return bridge
+}
 
-	err = bridge.Login(cfg.APIKey)
+func setupPrometheus(bridge Bridge, cfg *Config) {
+	err := bridge.Login((*cfg).APIKey)
 	if err != nil {
-		log.Fatalf("Error authenticating with Hue bridge at %v: %v\n", cfg.IPAddr, err)
+		log.Fatalf("Error authenticating with Hue bridge at %v: %v\n", (*cfg).IPAddr, err)
 	}
 
 	prometheus.MustRegister(NewGroupCollector(namespace, bridge))
 	prometheus.MustRegister(NewLightCollector(namespace, bridge))
-	prometheus.MustRegister(NewSensorCollector(namespace, bridge, cfg.SensorConfig.IgnoreTypes))
+	prometheus.MustRegister(NewSensorCollector(namespace, bridge, (*cfg).SensorConfig.IgnoreTypes, (*cfg).SensorConfig.MatchNames))
+}
 
+func listen() {
 	http.Handle("/metrics", promhttp.Handler())
 	srv := &http.Server{
 		Addr:         (*addr).String(),
@@ -71,6 +80,19 @@ func runServer() {
 		WriteTimeout: 10 * time.Second,
 	}
 	log.Fatal(srv.ListenAndServe())
+}
+
+func runServer() {
+	var cfg Config
+
+	raw, err := ioutil.ReadFile(*config)
+	if err != nil {
+		log.Fatalf("Error reading config file: %v\n", err)
+	}
+	readConfig(raw, &cfg)
+	bridge := newBridge(cfg.IPAddr)
+	setupPrometheus(bridge, &cfg)
+	listen()
 }
 
 func main() {

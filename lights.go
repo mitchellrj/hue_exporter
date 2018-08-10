@@ -1,13 +1,12 @@
 package main
 
 import (
-	hue "github.com/collinux/gohue"
 	log "github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type lightCollector struct {
-	bridge             *hue.Bridge
+	bridge             Bridge
 	lightBrightness    *prometheus.GaugeVec
 	lightHue           *prometheus.GaugeVec
 	lightSaturation    *prometheus.GaugeVec
@@ -26,7 +25,7 @@ var variableLightLabelNames = []string{
 }
 
 // NewLightCollector Create a new Hue collector for lights
-func NewLightCollector(namespace string, bridge *hue.Bridge) prometheus.Collector {
+func NewLightCollector(namespace string, bridge Bridge) prometheus.Collector {
 	c := lightCollector{
 		bridge: bridge,
 		lightBrightness: prometheus.NewGaugeVec(

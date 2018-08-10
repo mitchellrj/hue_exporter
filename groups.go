@@ -1,13 +1,12 @@
 package main
 
 import (
-	hue "github.com/collinux/gohue"
 	log "github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type groupCollector struct {
-	bridge             *hue.Bridge
+	bridge             Bridge
 	groupBrightness    *prometheus.GaugeVec
 	groupHue           *prometheus.GaugeVec
 	groupSaturation    *prometheus.GaugeVec
@@ -21,7 +20,7 @@ var variableGroupLabelNames = []string{
 }
 
 // NewGroupCollector Create a new Hue collector for groups
-func NewGroupCollector(namespace string, bridge *hue.Bridge) prometheus.Collector {
+func NewGroupCollector(namespace string, bridge Bridge) prometheus.Collector {
 	c := groupCollector{
 		bridge: bridge,
 		groupBrightness: prometheus.NewGaugeVec(
