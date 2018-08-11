@@ -18,18 +18,26 @@ staticcheck:
 build:
 	go build
 
-dist: darwin amd64 arm7 docker
+dist: darwin amd64 arm7 amd64-musl arm7-musl docker
 
 darwin:
 	cp hue_exporter build/hue_exporter.darwin
 
 amd64:
-	docker build --pull -f Dockerfile.build.amd64 -t hue_exporter_builder:latest .
+	docker build --pull -f Dockerfile.build.amd64.glibc -t hue_exporter_builder:latest .
 	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest
 
 arm7:
-	docker build --pull -f Dockerfile.build.arm7 -t hue_exporter_builder:latest-arm .
+	docker build --pull -f Dockerfile.build.arm7.glibc -t hue_exporter_builder:latest-arm .
 	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest-arm
+
+amd64-musl:
+	docker build --pull -f Dockerfile.build.amd64.musl -t hue_exporter_builder:latest-musl .
+	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest-musl
+
+arm7-musl:
+	docker build --pull -f Dockerfile.build.arm7.musl -t hue_exporter_builder:latest-arm-musl .
+	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest-arm-musl
 
 docker:
 	docker build --pull -f Dockerfile.amd64 -t mitchellrj/hue_exporter:latest .

@@ -1,3 +1,7 @@
+# v0.2.1 (2018-08-11)
+
+Use musl builds for alpine images.
+
 # v0.2.0 (2018-08-10)
 
 * Corrected 'on' value for lights

@@ -20,7 +20,7 @@ Each light metric is labelled with the friendly name, the model, the type, the p
 * `hue_light_hue`
 * `hue_light_saturation`
 * `hue_light_on`: `0` means off, `1` means on
-* `hue_light_reachable`: `0` or `1` representing false or true 
+* `hue_light_reachable`: `0` or `1` representing false or true
 
 ## Group metrics
 
@@ -38,8 +38,8 @@ Each sensor metric is labelled with the friendly name, the model, the type, the 
 * `hue_sensor_value`: value varies depending on the `type` of the sensor. For switches, it's the value of the last button pressed; for daylight and presence sensors it's a `0` or `1` representing false or true values; for the temperature sensor it's hundredths of a degree celsius; for the light level sensor it's Lux.
 * `hue_sensor_battery`: battery level percentage (0 for sensors that have no battery)
 * `hue_sensor_last_updated`: last updated timestamp (Unix epoch)
-* `hue_sensor_on`: `0` or `1` representing false or true 
-* `hue_sensor_reachable`: `0` or `1` representing false or true 
+* `hue_sensor_on`: `0` or `1` representing false or true
+* `hue_sensor_reachable`: `0` or `1` representing false or true
 
 Some sensor type values you might find useful:
 
@@ -72,6 +72,10 @@ Those flag values are the defaults, so you could just run `hue_exporter` on its 
 ### Docker
 
 There are a few docker images built, including ones for ARM7 (Raspberry Pi). You can find these on [Docker Hub](https://hub.docker.com/r/mitchellrj/hue_exporter). They expose `/etc/hue_exporter` as a volume for you to generate or pass in your own configuration.
+
+```
+docker run -p 9366:9366 -v my_config.yml:/etc/hue_exporter/config.yml mitchellrj/hue_exporter:latest
+```
 
 ## License
 
