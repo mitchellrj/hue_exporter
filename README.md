@@ -1,5 +1,7 @@
 # Hue exporter
 
+[![Travis CI build](https://travis-ci.org/mitchellrj/hue_exporter.svg?branch=master)](https://travis-ci.org/mitchellrj/hue_exporter) [![Go report](https://goreportcard.com/badge/github.com/mitchellrj/hue_exporter)](https://goreportcard.com/report/github.com/mitchellrj/hue_exporter)
+
 This is a Prometheus exporter for the Philips Hue system. It's written in Go.
 
 It exposes metrics about lights, groups and sensors. I hope you like it.
