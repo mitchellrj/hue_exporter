@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -14,14 +13,16 @@ import (
 	hue "github.com/collinux/gohue"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/log"
+	"github.com/prometheus/common/version"
 )
 
 const namespace = "hue"
 
 var (
-	app     = kingpin.New("hue_exporter", "A Prometheus exporter for Philips Hue.")
-	version = app.Flag("version", "Print the version and exit.").Short('V').Bool()
-	run     = app.Command("run", "Run the exporter.").Default()
+	app         = kingpin.New("hue_exporter", "A Prometheus exporter for Philips Hue.")
+	showVersion = app.Flag("version", "Print the version and exit.").Short('V').Bool()
+	run         = app.Command("run", "Run the exporter.").Default()
 	// TODO: update https://github.com/prometheus/prometheus/wiki/Default-port-allocations
 	addr     = run.Flag("listen.address", "The address to listen on for HTTP requests.").Short('l').Default(":9366").TCP()
 	config   = run.Flag("config.file", "The config file to use.").Short('c').Default("hue_exporter.yml").ExistingFile()
@@ -70,15 +71,27 @@ func setupPrometheus(bridge Bridge, cfg *Config) {
 	prometheus.MustRegister(NewGroupCollector(namespace, bridge))
 	prometheus.MustRegister(NewLightCollector(namespace, bridge))
 	prometheus.MustRegister(NewSensorCollector(namespace, bridge, (*cfg).SensorConfig.IgnoreTypes, (*cfg).SensorConfig.MatchNames))
+	prometheus.MustRegister(version.NewCollector("hue_exporter"))
 }
 
 func listen() {
 	http.Handle("/metrics", promhttp.Handler())
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+            <head><title>Hue Exporter</title></head>
+            <body>
+            <h1>Hue Exporter</h1>
+            <p><a href="/metrics">Metrics</a></p>
+            </body>
+            </html>`))
+	})
 	srv := &http.Server{
 		Addr:         (*addr).String(),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
+		ErrorLog:     log.NewErrorLogger(),
 	}
+	log.Infoln("Listening on", (*addr).String())
 	log.Fatal(srv.ListenAndServe())
 }
 
@@ -96,10 +109,13 @@ func runServer() {
 }
 
 func main() {
+	log.AddFlags(app)
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
-	if *version {
-		fmt.Printf("%s\n", VERSION)
+	if *showVersion {
+		fmt.Fprintln(os.Stdout, version.Print("hue_exporter"))
 	} else {
+		log.Infoln("Starting hue_exporter", version.Info())
+		log.Infoln("Build context", version.BuildContext())
 		switch command {
 		case run.FullCommand():
 			runServer()

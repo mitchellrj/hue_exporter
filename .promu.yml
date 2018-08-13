@@ -1,0 +1,20 @@
+repository:
+    path: github.com/mitchellrj/hue_exporter
+build:
+    flags: -a -tags 'netgo static_build'
+    ldflags: |
+        -s
+        -X {{repoPath}}/vendor/github.com/prometheus/common/version.Version={{.Version}}
+        -X {{repoPath}}/vendor/github.com/prometheus/common/version.Revision={{.Revision}}
+        -X {{repoPath}}/vendor/github.com/prometheus/common/version.Branch={{.Branch}}
+        -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildUser={{user}}
+        -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
+tarball:
+    files:
+        - LICENSE
+crossbuild:
+  platforms:
+      - linux/amd64
+      - darwin/amd64
+      - linux/arm
+      - linux/arm64

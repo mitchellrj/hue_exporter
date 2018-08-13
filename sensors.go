@@ -2,8 +2,8 @@ package main
 
 import (
 	hue "github.com/collinux/gohue"
-	log "github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/prometheus/common/log"
 )
 
 type sensorCollector struct {

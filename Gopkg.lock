@@ -38,14 +38,6 @@
   source = "github.com/mitchellrj/gohue"
 
 [[projects]]
-  branch = "master"
-  digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
-
-[[projects]]
   digest = "1:15042ad3498153684d09f393bbaec6b216c8eec6d61f63dff711de7d64ed8861"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
@@ -82,12 +74,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:63b68062b8968092eb86bedc4e68894bd096ea6b24920faca8b9dcf451f54bb5"
+  digest = "1:ff2a455371a004cc443d0ba09fccb0944b38b533817b34304239def8b0d57737"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
     "internal/bitbucket.org/ww/goautoneg",
+    "log",
     "model",
+    "version",
   ]
   pruneopts = "UT"
   revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
@@ -104,6 +98,35 @@
   ]
   pruneopts = "UT"
   revision = "05ee40e3a273f7245e8777337fc7b46e533a9a92"
+
+[[projects]]
+  digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  pruneopts = "UT"
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5f9e311d0af909cd7277128777931136a926e383ec1eba9bb5224051160ac30e"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows",
+    "windows/registry",
+    "windows/svc/eventlog",
+  ]
+  pruneopts = "UT"
+  revision = "98c5dad5d1a0e8a73845ecc8897d0bd56586511d"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -126,9 +149,10 @@
   analyzer-version = 1
   input-imports = [
     "github.com/collinux/gohue",
-    "github.com/golang/glog",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
+    "github.com/prometheus/common/log",
+    "github.com/prometheus/common/version",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/yaml.v2",
   ]

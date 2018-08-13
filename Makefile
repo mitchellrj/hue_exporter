@@ -15,12 +15,15 @@ vet:
 staticcheck:
 	staticcheck ./...
 
-build:
-	go build
+promu:
+	GOOS= GOARCH= go get -u github.com/prometheus/promu
+
+build: promu
+	promu build
 
 dist: darwin amd64 arm7 amd64-musl arm7-musl docker
 
-darwin:
+darwin: build
 	cp hue_exporter build/hue_exporter.darwin
 
 amd64:
@@ -51,4 +54,4 @@ push:
 	docker push mitchellrj/hue_exporter:latest-arm7
 	docker push mitchellrj/hue_exporter:$$(build/hue_exporter.darwin -V)-arm7
 
-.PHONY: all style test format vet staticcheck build
+.PHONY: all style test format vet staticcheck promu build
