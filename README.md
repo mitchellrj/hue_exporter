@@ -53,6 +53,11 @@ Some sensor type values you might find useful:
 * `ZLLPresence`: the presence sensor in the Hue motion sensor
 * `ZLLLightLevel`: the light level sensor in the Hue motion sensor
 
+## General metrics
+
+* `hue_group_scrapes_failed`, `hue_light_scrapes_failed`, `hue_sensor_scrapes_failed`: count of failures when trying to scrape from the Hue API.
+* `hue_bridge_restarts`: count of times the bridge has restarted (*estimated based on sensor data*).
+
 ## Metric structure
 
 > Hey, why didn't you combine the metrics for brightness and hue and saturation and on and reachable?

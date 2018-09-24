@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+
 	hue "github.com/collinux/gohue"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/prometheus/common/log"
@@ -16,6 +18,7 @@ type sensorCollector struct {
 	sensorBattery       *prometheus.GaugeVec
 	sensorReachable     *prometheus.GaugeVec
 	sensorScrapesFailed prometheus.Counter
+	bridgeRestarts      prometheus.Counter
 }
 
 var variableSensorLabelNames = []string{
@@ -35,6 +38,13 @@ func contains(a []string, x string) bool {
 		}
 	}
 	return false
+}
+
+func max(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 // NewSensorCollector Create a new Hue collector for sensors
@@ -96,6 +106,14 @@ func NewSensorCollector(namespace string, bridge Bridge, ignoreTypes []string, m
 				Help:      "Count of scrapes of sensor data from the Hue bridge that have failed",
 			},
 		),
+		bridgeRestarts: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: namespace,
+				Subsystem: "bridge",
+				Name:      "restarts",
+				Help:      "Count of number of bridge restarts detected",
+			},
+		),
 	}
 
 	return c
@@ -108,6 +126,7 @@ func (c sensorCollector) Describe(ch chan<- *prometheus.Desc) {
 	c.sensorOn.Describe(ch)
 	c.sensorReachable.Describe(ch)
 	c.sensorScrapesFailed.Describe(ch)
+	c.bridgeRestarts.Describe(ch)
 }
 
 func (c sensorCollector) recordSensor(sensor hue.Sensor, sensorName string, deviceID string, sensorValue float64) {
@@ -149,6 +168,8 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 		c.sensorScrapesFailed.Inc()
 	}
 	sensorNames := make(map[string]string)
+	sensorLastUpdatedHistory := make(map[string]int64)
+	restartDetected := false
 
 	for _, sensor := range sensors {
 		var sensorValue float64
@@ -179,7 +200,10 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 		} else {
 			continue
 		}
-
+		if sensorLastUpdatedHistory[sensor.UniqueID] > math.MinInt64 && sensor.State.LastUpdated.Unix() == math.MinInt64 {
+			restartDetected = true
+		}
+		sensorLastUpdatedHistory[sensor.UniqueID] = sensor.State.LastUpdated.Unix()
 		c.recordSensor(sensor, sensor.Name, deviceID, sensorValue)
 	}
 	// kinda inefficient looping over them twice, but simplies code when name matching is enabled
@@ -201,7 +225,15 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 				sensorName = sensor.Name
 			}
 		}
+		if sensorLastUpdatedHistory[sensor.UniqueID] > math.MinInt64 && sensor.State.LastUpdated.Unix() == math.MinInt64 {
+			restartDetected = true
+		}
+		sensorLastUpdatedHistory[sensor.UniqueID] = sensor.State.LastUpdated.Unix()
 		c.recordSensor(sensor, sensorName, deviceID, sensorValue)
+	}
+
+	if restartDetected {
+		c.bridgeRestarts.Inc()
 	}
 
 	c.sensorValue.Collect(ch)
@@ -210,4 +242,5 @@ func (c sensorCollector) Collect(ch chan<- prometheus.Metric) {
 	c.sensorOn.Collect(ch)
 	c.sensorReachable.Collect(ch)
 	c.sensorScrapesFailed.Collect(ch)
+	c.bridgeRestarts.Collect(ch)
 }
