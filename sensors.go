@@ -142,7 +142,9 @@ func (c sensorCollector) recordSensor(sensor hue.Sensor, sensorName string, devi
 
 	c.sensorValue.With(sensorLabels).Set(sensorValue)
 	c.sensorBattery.With(sensorLabels).Set(float64(sensor.Config.Battery))
-	c.sensorLastUpdated.With(sensorLabels).Set(float64(sensor.State.LastUpdated.Unix()))
+	// let's set a sensible minimum for last updated here: if your sensor last updated before 1970,
+	// something's clearly not right. No need to set it to 1969 /BCE/.
+	c.sensorLastUpdated.With(sensorLabels).Set(float64(max(sensor.State.LastUpdated.Unix(), 0)))
 	if sensor.Config.On {
 		c.sensorOn.With(sensorLabels).Set(1)
 	} else {
