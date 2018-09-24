@@ -54,4 +54,5 @@ push:
 	docker push mitchellrj/hue_exporter:latest-arm7
 	docker push mitchellrj/hue_exporter:$$(build/hue_exporter.darwin -V)-arm7
 
+DEFAULT: all
 .PHONY: all style test format vet staticcheck promu build

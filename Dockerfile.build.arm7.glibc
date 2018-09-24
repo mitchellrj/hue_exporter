@@ -1,7 +1,8 @@
 FROM arm32v7/golang:stretch
 
+RUN go get -u github.com/prometheus/promu
 COPY . /go/src/github.com/mitchellrj/hue_exporter
 WORKDIR /go/src/github.com/mitchellrj/hue_exporter
 
 VOLUME /build
-CMD go build -o /build/hue_exporter.arm7
+CMD promu build && mv hue_exporter /build/hue_exporter.arm7
