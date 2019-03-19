@@ -1,8 +1,0 @@
-FROM amd64/golang:stretch
-
-RUN go get -u github.com/prometheus/promu
-COPY . /go/src/github.com/mitchellrj/hue_exporter
-WORKDIR /go/src/github.com/mitchellrj/hue_exporter
-
-VOLUME /build
-CMD promu build && mv hue_exporter /build/hue_exporter.amd64

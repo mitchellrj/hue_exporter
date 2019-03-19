@@ -1,7 +1,7 @@
 FROM        alpine:latest
 MAINTAINER  Richard Mitchell <hue-exporter@mitch.org.uk>
 
-COPY ./build/hue_exporter.amd64.musl /bin/hue_exporter
+COPY ./.build/linux-amd64/hue_exporter /bin/hue_exporter
 COPY hue_exporter.example.yml   /etc/hue_exporter/config.yml
 
 EXPOSE      9366

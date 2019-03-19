@@ -1,3 +1,6 @@
+PREFIX                  ?= $(shell pwd)
+VERSION                 ?= $(shell cat VERSION)
+
 all: style staticcheck build test
 
 style:
@@ -19,40 +22,24 @@ promu:
 	GOOS= GOARCH= go get -u github.com/prometheus/promu
 
 build: promu
-	promu build
+	promu build hue_exporter --prefix $(PREFIX)
 
-dist: darwin amd64 arm7 amd64-musl arm7-musl docker
+crossbuild:
+	promu crossbuild hue_exporter
 
-darwin: build
-	cp hue_exporter build/hue_exporter.darwin
-
-amd64:
-	docker build --pull -f Dockerfile.build.amd64.glibc -t hue_exporter_builder:latest .
-	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest
-
-arm7:
-	docker build --pull -f Dockerfile.build.arm7.glibc -t hue_exporter_builder:latest-arm .
-	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest-arm
-
-amd64-musl:
-	docker build --pull -f Dockerfile.build.amd64.musl -t hue_exporter_builder:latest-musl .
-	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest-musl
-
-arm7-musl:
-	docker build --pull -f Dockerfile.build.arm7.musl -t hue_exporter_builder:latest-arm-musl .
-	docker run -v $$(pwd)/build:/build hue_exporter_builder:latest-arm-musl
-
-docker:
+docker: crossbuild
 	docker build --pull -f Dockerfile.amd64 -t mitchellrj/hue_exporter:latest .
-	docker tag mitchellrj/hue_exporter:latest mitchellrj/hue_exporter:$$(build/hue_exporter.darwin -V)
+	docker tag mitchellrj/hue_exporter:latest mitchellrj/hue_exporter:$(VERSION)
 	docker build --pull -f Dockerfile.arm7 -t mitchellrj/hue_exporter:latest-arm7 .
-	docker tag mitchellrj/hue_exporter:latest mitchellrj/hue_exporter:$$(build/hue_exporter.darwin -V)-arm7
+	docker tag mitchellrj/hue_exporter:latest mitchellrj/hue_exporter:$(VERSION)-arm7
+
+dist: docker
 
 push:
 	docker push mitchellrj/hue_exporter:latest
-	docker push mitchellrj/hue_exporter:$$(build/hue_exporter.darwin -V)
+	docker push mitchellrj/hue_exporter:$(VERSION)
 	docker push mitchellrj/hue_exporter:latest-arm7
-	docker push mitchellrj/hue_exporter:$$(build/hue_exporter.darwin -V)-arm7
+	docker push mitchellrj/hue_exporter:$(VERSION)-arm7
 
 DEFAULT: all
-.PHONY: all style test format vet staticcheck promu build
+.PHONY: all style test format vet staticcheck promu build crossbuild dist docker push

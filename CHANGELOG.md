@@ -1,3 +1,9 @@
+# v0.2.2 (2019-03-19)
+
+* Add counter metric for bridge restarts
+* Fix build info metrics for dockerized builds
+* Fix crossbuilds
+
 # v0.2.1 (2018-08-11)
 
 Use musl builds for alpine images.
