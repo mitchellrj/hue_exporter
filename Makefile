@@ -31,7 +31,7 @@ docker: crossbuild
 	docker build --pull -f Dockerfile.amd64 -t mitchellrj/hue_exporter:latest .
 	docker tag mitchellrj/hue_exporter:latest mitchellrj/hue_exporter:$(VERSION)
 	docker build --pull -f Dockerfile.arm7 -t mitchellrj/hue_exporter:latest-arm7 .
-	docker tag mitchellrj/hue_exporter:latest mitchellrj/hue_exporter:$(VERSION)-arm7
+	docker tag mitchellrj/hue_exporter:latest-arm7 mitchellrj/hue_exporter:$(VERSION)-arm7
 
 dist: docker
 
