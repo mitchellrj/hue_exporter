@@ -84,6 +84,44 @@ There are a few docker images built, including ones for ARM7 (Raspberry Pi). You
 docker run -p 9366:9366 -v my_config.yml:/etc/hue_exporter/config.yml mitchellrj/hue_exporter:latest
 ```
 
+### Kubernetes
+
+The manifests directory includes a Deployment, a Service, a ServiceMonitor, and a ConfigMap.
+The config for the hue bridge (IP address and user token) are stored in the config map.
+
+The manifests assume you have prometheus deployed in `monitoring` namespace and are deployed in the same namespace. In
+case you prometheus is running in a different namespace, change the namespace of the manifests too to match the namespace.
+Prometheus `ServiceMonitorSelector` config needs to be able to match to the ServiceMonitor labels.
+
+e.g. in this case the serviceMonitorSelector is matching the name key in labels of the ServiceMonitor.
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  ...
+  serviceMonitorSelector:
+    matchExpressions:
+    - key: name
+      operator: In
+      values:
+      - hue-exporter
+      - kube-state-metrics
+      - node-exporter
+      - kubelet
+  ...
+
+```
+
+There are two sets of manifests: one for arm7 and one for amd64. The
+only difference between the two manifests is the image tag in the deployment.yaml.
+
+- For amd64 cluster: `kubectl apply -f manifests/amd64`
+- For arm7 cluster: `kubectl apply -f manifests/arm7`
+
+
 ## License
 
 MIT / X11 Consortium license. I'd prefer to use Apache 2.0, but the excellent Hue library that this app uses is GPL 2.0 and that isn't compatible with Apache.

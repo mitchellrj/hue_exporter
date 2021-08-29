@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hue-exporter-config
+  namespace: monitoring
+data:
+  config.yml: |
+    ip_address: 192.168.1.2
+    api_key: "PCZtdsLqGSNaPYUX7SBedriXkud322UZZk3TsJf9"
+    sensors:
+      match_names: true
+      ignore_types:
+      - CLIPGenericStatus

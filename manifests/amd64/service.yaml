@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: hue-exporter
+  name: hue-exporter
+  namespace: monitoring
+spec:
+  ports:
+    - name: metrics
+      port: 9366
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: hue-exporter
