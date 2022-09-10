@@ -68,6 +68,13 @@ I tried that, but because of the different label combinations, it didn't really 
 
 There's an example configuration file `hue_exporter.example.yml` in this repository, but you can also generate one! Run `hue_exporter generate` to have the app discover to your Hue bridge and create an API user for itself, then write the necessary configuration.
 
+You can also replace some configuration value with OS environment variables.
+
+```yaml
+ip_address: ${IP_ADDRESS}
+api_key: ${API_KEY}
+```
+
 ## Running
 
 ```
