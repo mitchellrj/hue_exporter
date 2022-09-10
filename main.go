@@ -102,6 +102,8 @@ func runServer() {
 	if err != nil {
 		log.Fatalf("Error reading config file: %v\n", err)
 	}
+	// expand environment variables in config file
+	raw = []byte(os.ExpandEnv(string(raw)))
 	readConfig(raw, &cfg)
 	bridge := newBridge(cfg.IPAddr)
 	setupPrometheus(bridge, &cfg)
